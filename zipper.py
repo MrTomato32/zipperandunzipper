@@ -164,13 +164,24 @@ def scegli_lingua():
         print("Scelta non valida / Invalid choice")
 
 
-def leggi_percorso(prompt):
-    percorso = input(prompt).strip()
+def normalizza_percorso(percorso):
+    percorso = percorso.strip()
+    percorso_senza_virgolette = percorso.strip("'\"")
+    if (
+        len(percorso_senza_virgolette) >= 3
+        and percorso_senza_virgolette[1] == ":"
+        and percorso_senza_virgolette[2] in "\\/"
+    ) or percorso_senza_virgolette.startswith("\\\\"):
+        return percorso_senza_virgolette
     try:
         parti = shlex.split(percorso)
     except ValueError:
         parti = [percorso.strip("'\"")]
     return " ".join(parti) if parti else percorso.strip("'\"")
+
+
+def leggi_percorso(prompt):
+    return normalizza_percorso(input(prompt))
 
 
 def comprimi_cartella():
@@ -224,9 +235,7 @@ def estrai_zip():
     if not destinazione:
         destinazione = cartella_default
     else:
-        parti_destinazione = shlex.split(destinazione)
-        if parti_destinazione:
-            destinazione = " ".join(parti_destinazione)
+        destinazione = normalizza_percorso(destinazione)
 
     print(text("extracting", path=file_zip))
 
