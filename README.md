@@ -16,8 +16,8 @@ python zipper.py
 This is in beta, expect bugs and more.
 
 #Credits:
-AI
-Couple of friends
-Family members
+AI,
+Couple of friends,
+Family members,
 
 Thank you for trying out my program! :)
