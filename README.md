@@ -3,7 +3,7 @@ A simple zipper and unzipper.
 
 Make sure you have Python 3.x installed on your system.
 
-#Installation
+#Installation:
 Clone the repo:
 ''bash
 git clone https://github.com/MrTomato32/zipperandunzipper
@@ -12,10 +12,12 @@ cd zipper and unzipper
 #Run the script
 python zipper.py
 
-#Extra info
+#Extra info:
 This is in beta, expect bugs and more.
 
-#Credits
+#Credits:
 AI
 Couple of friends
 Family members
+
+Thank you for trying out my program! :)
