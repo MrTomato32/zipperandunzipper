@@ -9,7 +9,7 @@ Clone the repo:
 git clone https://github.com/MrTomato32/zipperandunzipper
 cd zipper and unzipper
 
-#Run the script
+#Run the script:
 python zipper.py
 
 #Extra info:
