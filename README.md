@@ -1,4 +1,4 @@
-# zipperandunzipper
+# zipperandunzipper V.1.1
 A simple zipper and unzipper.
 
 Make sure you have Python 3.x installed on your system.
