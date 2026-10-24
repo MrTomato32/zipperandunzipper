@@ -5,9 +5,8 @@ Make sure you have Python 3.x installed on your system.
 
 #Installation:
 Clone the repo:
-''bash
 git clone https://github.com/MrTomato32/zipperandunzipper
-cd zipper and unzipper
+cd zipperandunzipper
 
 #Run the script:
 python zipper.py
