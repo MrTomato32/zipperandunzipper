@@ -1,4 +1,4 @@
-# zipperandunzipper V.1.1
+# zipperandunzipper V.1.2
 A simple zipper and unzipper.
 
 Make sure you have Python 3.x installed on your system.
@@ -20,3 +20,8 @@ Couple of friends,
 Family members,
 
 Thank you for trying out my program! :)
+
+# changelogs
+- Added .tar.gz compatibility for extraction
+- Fixed bugs
+- Improved speed and gui
