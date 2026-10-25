@@ -2,6 +2,7 @@ import os
 import shlex
 import sys
 import zipfile
+import tarfile
 
 LANGUAGE = "it"
 
@@ -32,7 +33,7 @@ TEXT = {
         "menu_title": "    ZIPPER AND UNZIPPER VERSION 1.0",
         "menu_hint": "SELEZIONA 1-3  |  INVIO PER APRIRE  |  CTRL+C PER USCIRE",
         "compress_option": "1. Comprimi una cartella in ZIP",
-        "extract_option": "2. Estrai una cartella ZIP",
+        "extract_option": "2. Estrai una cartella ZIP/TAR.GZ",
         "exit_option": "3. Esci",
         "choice_prompt": "\nScegli un'opzione (1-3): ",
         "goodbye": "\nA presto!",
@@ -64,7 +65,7 @@ TEXT = {
         "menu_title": "    ZIPPER AND UNZIPPER VERSION 1.0",
         "menu_hint": "SELECT 1-3  |  ENTER TO OPEN  |  CTRL+C TO EXIT",
         "compress_option": "1. Zip a folder",
-        "extract_option": "2. Extract a ZIP file",
+        "extract_option": "2. Extract a ZIP/TAR.GZ FILE",
         "exit_option": "3. Exit",
         "choice_prompt": "\nChoose an option (1-3): ",
         "goodbye": "\nGoodbye!",
@@ -96,7 +97,7 @@ TEXT = {
         "menu_title": "    ZIPPER AND UNZIPPER VERSION 1.0",
         "menu_hint": "ELIGE 1-3  |  ENTER PARA ABRIR  |  CTRL+C PARA SALIR",
         "compress_option": "1. Comprimir una carpeta en ZIP",
-        "extract_option": "2. Extraer un archivo ZIP",
+        "extract_option": "2. Extraer un archivo ZIP/TAR.GZ",
         "exit_option": "3. Salir",
         "choice_prompt": "\nElige una opción (1-3): ",
         "goodbye": "\n¡Hasta luego!",
@@ -128,7 +129,7 @@ TEXT = {
         "menu_title": "    ZIPPER AND UNZIPPER VERSION 1.0",
         "menu_hint": "CHOISIS 1-3  |  ENTRÉE POUR OUVRIR  |  CTRL+C POUR QUITTER",
         "compress_option": "1. Compresser un dossier en ZIP",
-        "extract_option": "2. Extraire une archive ZIP",
+        "extract_option": "2. Extraire une archive ZIP/TAR.GZ",
         "exit_option": "3. Quitter",
         "choice_prompt": "\nChoisis une option (1-3) : ",
         "goodbye": "\nÀ bientôt !",
@@ -160,7 +161,7 @@ TEXT = {
         "menu_title": "    ZIPPER AND UNZIPPER VERSION 1.0",
         "menu_hint": "1-3 WÄHLEN  |  ENTER ZUM ÖFFNEN  |  CTRL+C ZUM BEENDEN",
         "compress_option": "1. Ordner als ZIP komprimieren",
-        "extract_option": "2. ZIP-Datei entpacken",
+        "extract_option": "2. ZIP-Datei/TAR.GZ-Datei entpacken",
         "exit_option": "3. Beenden",
         "choice_prompt": "\nBitte Option wählen (1-3): ",
         "goodbye": "\nAuf Wiedersehen!",
@@ -268,8 +269,8 @@ def comprimi_cartella():
     if not nome_output:
         print(text("empty_zip_name"))
         return
-    if not nome_output.lower().endswith(".zip"):
-        nome_output += ".zip"
+    if not nome_output.lower().endswith(".zip", ".tar.gz", ".tgz"):
+        nome_output += ".zip", ".tar.gz", ".tgz"
     nome_output = os.path.abspath(nome_output)
 
     if os.path.exists(nome_output):
@@ -299,20 +300,64 @@ def comprimi_cartella():
 
     print(text("zip_created", path=os.path.abspath(nome_output)))
 
+def comprimi_tar_gz():
+    print(f"\n--- COMPRESSIONE ---")
+    cartella = leggi_percorso(text("folder_promnpt"))
 
-def estrai_zip():
+    if not os.path.isdir(cartella):
+        print(text("folder_not_found"))
+        return
+
+    nome_output = normalizza_percorso(input("Come vuoi chiamare il file TAR.GZ? (esempio archivio.tar.gz)"))
+    if not nome_output:
+        print("Inserisci un nome valido")
+        return
+    if not nome_output.lower().endswith((".tar.gz", ".tgz")):
+        nome_output += ".tar.gz"
+    nome_output = os.path.abspath(nome_output)
+
+    if os.path.exists(nome_output):
+        print(text("output_exists", path =nome_output))
+        conferma = input(text("overwrite_prompt")).strip().lower()
+        if conferma not in YES_OPTIONS[LANGUAGE]:
+            print(text("cancelled"))
+            return
+    
+    print(f"\nSto comprimendo '{cartella}' in TAR.GZ...")
+
+
+    try:
+        with tarfile.open(nome_output, "w:gz") as tar:
+            tar.add(cartella, arcname=os.path.basename(cartella))
+    except (OSError, tarfile.TarError) as errore:
+        print(text("compression_error", error=errore))
+        return
+
+
+    print(f"File TAR.GZ creato con successo: {os.path.abspath(nome_output)}")
+
+def estrai_archivio():
     print(f"\n{text('extract_title')}")
     file_zip = leggi_percorso(text("zip_prompt"))
 
     if not os.path.isfile(file_zip):
         print(text("file_not_found", path=file_zip))
         return
-    if not file_zip.lower().endswith(".zip"):
+
+    if file_zip.lower().endswith(".zip"):
+        if not zipfile.is_zipfile(file_zip):
+            print(text("invalid_archive"))
+            return
+
+    elif file_zip.lower().endswith((".tar.gz", ".tgz")):
+        if not tarfile.is_tarfile(file_zip):
+            print(text("invalid_archive"))
+            return
+
+    else:
         print(text("zip_extension"))
         return
-    if not zipfile.is_zipfile(file_zip):
-        print(text("invalid_archive"))
-        return
+
 
     cartella_zip = os.path.dirname(os.path.abspath(file_zip))
     cartella_default = os.path.splitext(os.path.basename(file_zip))[0]
@@ -321,39 +366,18 @@ def estrai_zip():
 
     if not destinazione:
         destinazione = cartella_default
-    else:
-        destinazione = normalizza_percorso(destinazione)
-
-    if os.path.isdir(destinazione) and os.listdir(destinazione):
-        print(text("destination_exists", path=os.path.abspath(destinazione)))
-        conferma = input(text("extract_confirm_prompt")).strip().lower()
-        if conferma not in YES_OPTIONS[LANGUAGE]:
-            print(text("cancelled"))
-            return
-
-    print(text("extracting", path=file_zip))
 
     try:
-        os.makedirs(destinazione, exist_ok=True)
-        with zipfile.ZipFile(file_zip, "r") as zip_ref:
-            elementi = zip_ref.namelist()
-            zip_ref.extractall(destinazione)
-    except (OSError, zipfile.BadZipFile, RuntimeError) as errore:
-        print(text("extract_error", error=errore))
-        return
-
-    print(text(
-        "extracted",
-        count=len(elementi),
-        label={
-            "it": ("elemento" if len(elementi) == 1 else "elementi"),
-            "en": ("item" if len(elementi) == 1 else "items"),
-            "es": ("elemento" if len(elementi) == 1 else "elementos"),
-            "fr": ("élément" if len(elementi) == 1 else "éléments"),
-            "de": ("Eintrag" if len(elementi) == 1 else "Einträge"),
-        }[LANGUAGE],
-        path=os.path.abspath(destinazione),
-    ))
+        if file_zip.lower().endswith(".zip"):
+            with zipfile.ZipFile(file_zip, 'r') as zip_ref:
+                zip_ref.extractall(destinazione)
+        elif file_zip.lower().endswith((".tar.gz", ".tgz")):
+            with tarfile.open(file_zip, 'r:*') as tar_ref:
+                tar_ref.extractall(path=destinazione)
+                
+        print(f"Archivio estratto con successo in: {destinazione}")
+    except Exception as e:
+        print(text("extract_error", error=e))
 
 
 def easter_egg():
@@ -388,10 +412,24 @@ def main():
 
         scelta = input(text("choice_prompt")).strip()
 
-        if scelta =="1":
+        if scelta == "2":
+            print("Quale di questi vuoi scegliere?")
+            print("1. ZIP (.zip)")
+            print("2. TAR.GZ (.tar.gz)")
+
+            scelta_formato = input("Scegli (1 o 2): ").strip()
+
+            if scelta_formato == "1":
+                print("Hai scelto ZIP!")
+                estrai_archivio()
+            elif scelta_formato == "2":
+                print("Hai scelto TAR.GZ!")
+                estrai_archivio()
+            else:
+                print("Scelta non valida!")
+       
+        elif scelta == "1":
             comprimi_cartella()
-        elif scelta == "2":
-            estrai_zip()
         elif scelta == "3":
             print(text("goodbye"))
             break
@@ -406,3 +444,4 @@ if __name__ == "__main__":
         main()
     except (KeyboardInterrupt, EOFError):
         print(f"\n{text('goodbye')}")
+        
